@@ -10,69 +10,40 @@ using Castle.DynamicProxy;
 
 namespace AOPLogging
 {
+    /// <summary>
+    /// console application for showing use of AutoFac AOP's method intercept for logging 
+    /// </summary>
     class Program
     {
         static void Main(string[] args)
         {
             var builder = new Autofac.ContainerBuilder();
 
+            //register our fancy report, enable class interception and 
+            // set the interception to happen with class ItsLog
             builder.RegisterType<FancyReport>()
                 .As<FancyReport>()
                 .EnableClassInterceptors()
                 .InterceptedBy(typeof (ItsLog));
 
-            builder.RegisterType<LoggedType2>()
-                .As<LoggedType2>()
+            builder.RegisterType<FancyReport2>()
+                .As<FancyReport2>()
                 .EnableClassInterceptors()
                 .InterceptedBy(typeof(ItsLog));
 
-
-            builder.RegisterType<ItsLog>();
-            //typed registration
-            builder.RegisterCallback(c => new ItsLog());
+            //register ItsLog with the constructor containing the info of our statsd server
+            builder.Register(c => new ItsLog("127.0.0.1", 8125));
 
             var container = builder.Build();
 
-            //use it
+            //use the wired up fancy report and witness the interception
             var intercepted = container.Resolve<FancyReport>();
             intercepted.DoReport("first");
             intercepted.DoReport("second");
 
-            var intercepted2 = container.Resolve<LoggedType2>();
+            var intercepted2 = container.Resolve<FancyReport2>();
             intercepted2.DoReport("first");
             intercepted2.DoReport("second");
-
         }
-
-     
     }
-
-    public interface IReport
-    {
-        void DoReport(string something);
-    }
-
-    public class FancyReport : IReport
-    {
-        public virtual void DoReport(string something)
-        {
-            Console.WriteLine("Report {0}", something);
-        }
-
-    }
-
-    public class LoggedType2 : IReport
-    {
-        public virtual void DoReport(string something)
-        {
-            CalledSomething(something);
-        }
-
-        public void CalledSomething(string something)
-        {
-            Console.WriteLine("Do {0}", something);
-        }
-
-    }
-    
 }
