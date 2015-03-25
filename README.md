@@ -40,8 +40,8 @@ Before doing anything else, I got Autofac’s Autofac.AOP from nuget. Then, I cr
 
         public void Intercept(IInvocation invocation)
         {
-
-var name = string.Format("{0}.{1}", invocation.TargetType.FullName, invocation.MethodInvocationTarget.Name);
+            var name = string.Format("{0}.{1}", invocation.TargetType.FullName
+             , invocation.MethodInvocationTarget.Name);
             
             DogStatsd.Increment(name);
 
